@@ -1,0 +1,7 @@
+{
+    "api_key": "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",
+    "temperature": 0.76,
+    "top_p": 0.88,
+    "model": "text-davinci-002",
+    "show_token_cost": true
+}
