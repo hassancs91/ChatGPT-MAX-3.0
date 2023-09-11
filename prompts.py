@@ -18,3 +18,13 @@ when writing the following content I am going to ask you to create,
 I need it to have a good amount of perplexity and burstiness.
 Keep that information in mind while writing.
 Maximum: [{MaxPoints}], Minimum[{MinPoints}], Text: {InputText} """
+
+
+rewrite_prompt = """Your task is to enhance a given text by amplifying its originality,
+removing any elements of plagiarism, and improving its readability
+to make it appear as if it was written by a human. While doing so,
+it is crucial to preserve the main idea and objective of the text.
+The text you need to refine is provided below: {text}"""
+
+
+google_search_prompt = "I will provide you with the summaries of multiple articles, extract the main points, and create a small research paragraph in 7-10 senteces. input: {input}"

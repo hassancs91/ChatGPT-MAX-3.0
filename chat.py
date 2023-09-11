@@ -1,9 +1,24 @@
+# prototype
+
+
 import openai
 import streamlit as st
 import json
 import google_serp
+import prompts
 import blog_posts
 import tokens_count
+import os
+
+
+def log_to_file(log_message, filename="log.txt"):
+    # Get the current directory
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Create or open the log file in append mode
+    log_file_path = os.path.join(current_directory, filename)
+    with open(log_file_path, "a") as log_file:
+        log_file.write(log_message + "\n")
 
 
 # Define functions to interact with the JSON file
@@ -110,9 +125,6 @@ if prompt := st.chat_input("What is up?"):
 
     if prompt.strip().lower().startswith("/summarize"):
         blog_url = prompt.split(" ", 1)[1].strip()
-        st.session_state.messages.append(
-            {"role": "user", "content": "Summarizing: " + blog_url}
-        )
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             message_placeholder.markdown("Summarizing: " + blog_url)
@@ -139,61 +151,86 @@ if prompt := st.chat_input("What is up?"):
 
     elif prompt.strip().lower().startswith("/rewrite"):
         input_text = prompt.split(" ", 1)[1].strip()
-        st.session_state.messages.append({"role": "user", "content": "Rewriting..."})
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             message_placeholder.markdown("Rewriting...")
-            rewrite_prompt = blog_posts.get_blog_summary_prompt(input_text)
-            # response_obj = openai.ChatCompletion.create(
-            #     model=model,
-            #     messages=[{"role": "user", "content": rewrite_prompt}],
-            #     temperature=temperature,
-            #     top_p=top_p,
-            #     stream=True,
-            # )
-            # new_written_text = ""
-            # for response in response_obj:
-            #     new_written_text += response.choices[0].delta.get("content", "")
-            #     message_placeholder.markdown(new_written_text + "▌")
+            rewrite_prompt = prompts.rewrite_prompt.format(text=input_text)
+            response_obj = openai.ChatCompletion.create(
+                model=model,
+                messages=[{"role": "user", "content": rewrite_prompt}],
+                temperature=temperature,
+                top_p=top_p,
+                stream=True,
+            )
+            new_written_text = ""
+            for response in response_obj:
+                new_written_text += response.choices[0].delta.get("content", "")
+                message_placeholder.markdown(new_written_text + "▌")
 
-            # # update the whole prompt to update token count
-            # start_prompt_used = rewrite_prompt + new_written_text
+            # update the whole prompt to update token count
+            start_prompt_used = rewrite_prompt + new_written_text
 
-            # message_placeholder.markdown(new_written_text)
-            # st.session_state.messages.append(
-            #     {"role": "assistant", "content": new_written_text}
-            # )
+            message_placeholder.markdown(new_written_text)
+            st.session_state.messages.append(
+                {"role": "assistant", "content": new_written_text}
+            )
 
     elif prompt.strip().lower().startswith("/google"):
         input_query = prompt.split(" ", 1)[1].strip()
-        st.session_state.messages.append(
-            {"role": "user", "content": "Searching Google For: " + input_query + " ..."}
-        )
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             message_placeholder.markdown(
                 "Searching Google For: " + input_query + " ..."
             )
-            # rewrite_prompt = blog_posts.get_blog_summary_prompt(input_query)
-            # response_obj = openai.ChatCompletion.create(
-            #     model=model,
-            #     messages=[{"role": "user", "content": rewrite_prompt}],
-            #     temperature=temperature,
-            #     top_p=top_p,
-            #     stream=True,
-            # )
-            # new_written_text = ""
-            # for response in response_obj:
-            #     new_written_text += response.choices[0].delta.get("content", "")
-            #     message_placeholder.markdown(new_written_text + "▌")
+            search_results = google_serp.search_google_web_automation(input_query)
+            over_all_summary = ""
 
-            # update the whole prompt to update token count
-            # start_prompt_used = rewrite_prompt + new_written_text
+            source_links = "\n \n Sources: \n \n"
 
-            # message_placeholder.markdown(new_written_text)
-            # st.session_state.messages.append(
-            # {"role": "assistant", "content": new_written_text}
-            # )
+            for result in search_results:
+                blog_url = result["url"]
+                source_links += blog_url + "\n \n"
+                message_placeholder.markdown(f"Search Done, Reading {blog_url}")
+                blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
+                response_obj = openai.ChatCompletion.create(
+                    model=model,
+                    messages=[{"role": "user", "content": blog_summary_prompt}],
+                    temperature=temperature,
+                    top_p=top_p,
+                    stream=True,
+                )
+
+                blog_summary = ""
+                for response in response_obj:
+                    blog_summary += response.choices[0].delta.get("content", "")
+
+                over_all_summary = over_all_summary + blog_summary
+                start_prompt_used = blog_summary_prompt + blog_summary
+
+            message_placeholder.markdown(f"Generating Final Search Report...")
+
+            new_search_prompt = prompts.google_search_prompt.format(
+                input=over_all_summary
+            )
+
+            response_obj = openai.ChatCompletion.create(
+                model=model,
+                messages=[{"role": "user", "content": new_search_prompt}],
+                temperature=temperature,
+                top_p=top_p,
+                stream=True,
+            )
+            research_final = ""
+            for response in response_obj:
+                research_final += response.choices[0].delta.get("content", "")
+                message_placeholder.markdown(research_final + "▌")
+
+            start_prompt_used = start_prompt_used + new_search_prompt + research_final
+
+            message_placeholder.markdown(research_final + source_links)
+            st.session_state.messages.append(
+                {"role": "assistant", "content": research_final + source_links}
+            )
 
     else:
         with st.chat_message("user"):
