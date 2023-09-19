@@ -1,6 +1,5 @@
 # prototype
 
-
 import openai
 import streamlit as st
 import json
@@ -79,15 +78,8 @@ if "cumulative_tokens" not in st.session_state:
 if "cumulative_cost" not in st.session_state:
     st.session_state.cumulative_cost = 0
 
-cost_per_token = 0.01  # Hypothetical cost, you should replace it with the actual cost.
 
-
-st.title("ChatGPT Max 3.0")
-
-
-# Display cumulative tokens and cost in the left sidebar
-# st.sidebar.markdown(f"**Total Tokens Used This Session:** {st.session_state.cumulative_tokens}")
-# st.sidebar.markdown(f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.2f}")
+st.title("ChatGPT Max 3.0 🚀")
 
 
 # Set the API key if it's provided
@@ -265,12 +257,9 @@ if prompt := st.chat_input("What is up?"):
 
     if show_token_cost:
         total_tokens_used = tokens_count.count_tokens(start_prompt_used, model)
-        print(total_tokens_used)
         total_cost = tokens_count.estimate_input_cost_optimized(
             model, total_tokens_used
         )
-        print(len(start_prompt_used))
-        print(total_cost)
         st.session_state.cumulative_tokens += total_tokens_used
         st.session_state.cumulative_cost += total_cost
 
