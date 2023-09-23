@@ -1,0 +1,7 @@
+{
+    "api_key": "sk-",
+    "temperature": 0.89,
+    "top_p": 0.61,
+    "model": "gpt-4",
+    "show_token_cost": true
+}
