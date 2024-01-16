@@ -121,7 +121,7 @@ if prompt := st.chat_input("What is up?"):
             message_placeholder = st.empty()
             message_placeholder.markdown("Summarizing: " + blog_url)
             blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
-            response_obj = openai.ChatCompletion.create(
+            response_obj = openai.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": blog_summary_prompt}],
                 temperature=temperature,
@@ -129,8 +129,11 @@ if prompt := st.chat_input("What is up?"):
                 stream=True,
             )
             blog_summary = ""
+
+                
             for response in response_obj:
-                blog_summary += response.choices[0].delta.get("content", "")
+                if response.choices[0].delta.content is not None:
+                    blog_summary += response.choices[0].delta.content
                 message_placeholder.markdown(blog_summary + "▌")
 
             # update the whole prompt to update token count
@@ -147,7 +150,7 @@ if prompt := st.chat_input("What is up?"):
             message_placeholder = st.empty()
             message_placeholder.markdown("Rewriting...")
             rewrite_prompt = prompts.rewrite_prompt.format(text=input_text)
-            response_obj = openai.ChatCompletion.create(
+            response_obj = openai.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": rewrite_prompt}],
                 temperature=temperature,
@@ -156,7 +159,8 @@ if prompt := st.chat_input("What is up?"):
             )
             new_written_text = ""
             for response in response_obj:
-                new_written_text += response.choices[0].delta.get("content", "")
+                if response.choices[0].delta.content is not None:
+                    new_written_text += response.choices[0].delta.content
                 message_placeholder.markdown(new_written_text + "▌")
 
             # update the whole prompt to update token count
@@ -184,7 +188,7 @@ if prompt := st.chat_input("What is up?"):
                 source_links += blog_url + "\n \n"
                 message_placeholder.markdown(f"Search Done, Reading {blog_url}")
                 blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
-                response_obj = openai.ChatCompletion.create(
+                response_obj = openai.chat.completions.create(
                     model=model,
                     messages=[{"role": "user", "content": blog_summary_prompt}],
                     temperature=temperature,
@@ -194,7 +198,8 @@ if prompt := st.chat_input("What is up?"):
 
                 blog_summary = ""
                 for response in response_obj:
-                    blog_summary += response.choices[0].delta.get("content", "")
+                    if response.choices[0].delta.content is not None:
+                        blog_summary += response.choices[0].delta.content
 
                 over_all_summary = over_all_summary + blog_summary
                 start_prompt_used = blog_summary_prompt + blog_summary
@@ -205,7 +210,7 @@ if prompt := st.chat_input("What is up?"):
                 input=over_all_summary
             )
 
-            response_obj = openai.ChatCompletion.create(
+            response_obj = openai.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": new_search_prompt}],
                 temperature=temperature,
@@ -214,7 +219,8 @@ if prompt := st.chat_input("What is up?"):
             )
             research_final = ""
             for response in response_obj:
-                research_final += response.choices[0].delta.get("content", "")
+                if response.choices[0].delta.content is not None:
+                    research_final += response.choices[0].delta.content
                 message_placeholder.markdown(research_final + "▌")
 
             start_prompt_used = start_prompt_used + new_search_prompt + research_final
@@ -232,7 +238,7 @@ if prompt := st.chat_input("What is up?"):
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             full_response = ""
-            response_obj = openai.ChatCompletion.create(
+            response_obj = openai.chat.completions.create(
                 model=model,
                 messages=[
                     {"role": m["role"], "content": m["content"]}
@@ -244,7 +250,8 @@ if prompt := st.chat_input("What is up?"):
             )
 
             for response in response_obj:
-                full_response += response.choices[0].delta.get("content", "")
+                if response.choices[0].delta.content is not None:
+                    full_response += response.choices[0].delta.content
                 message_placeholder.markdown(full_response + "▌")
 
             message_placeholder.markdown(full_response)

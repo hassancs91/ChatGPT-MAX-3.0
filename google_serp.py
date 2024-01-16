@@ -5,14 +5,15 @@ from urllib.parse import urlparse
 import requests
 import json
 import os
+from selenium.webdriver.chrome.options import Options
 
 
 def search_google_web_automation(query):
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    driver = webdriver.Chrome(options=options)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option("useAutomationExtension", False)
+    driver = webdriver.Chrome(options=chrome_options)
 
     stealth(
         driver,
@@ -52,3 +53,5 @@ def search_google_web_automation(query):
                 }
             )
     return results[:3]
+
+
